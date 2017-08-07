@@ -1,4 +1,4 @@
-// Simple wrapper for rrdtool C library
+// Package rrd : Simple wrapper for rrdtool C library
 package rrd
 
 import (
@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Error : Error String
 type Error string
 
 func (e Error) Error() string {
@@ -52,6 +53,7 @@ func join(args []interface{}) string {
 	return strings.Join(sa, ":")
 }
 
+// Creator :
 type Creator struct {
 	filename string
 	start    time.Time
@@ -106,6 +108,7 @@ func (c *Creator) Create(overwrite bool) error {
 
 // Use cstring and unsafe.Pointer to avoid allocations for C calls
 
+// Updater :
 type Updater struct {
 	filename *cstring
 	template *cstring
@@ -113,6 +116,7 @@ type Updater struct {
 	args []*cstring
 }
 
+// NewUpdater :
 func NewUpdater(filename string) *Updater {
 	u := &Updater{filename: newCstring(filename)}
 	runtime.SetFinalizer(u, cfree)
@@ -127,6 +131,7 @@ func cfree(u *Updater) {
 	}
 }
 
+// SetTemplate :
 func (u *Updater) SetTemplate(dsName ...string) {
 	u.template.Free()
 	u.template = newCstring(strings.Join(dsName, ":"))
@@ -144,7 +149,7 @@ func (u *Updater) Cache(args ...interface{}) {
 func (u *Updater) Update(args ...interface{}) error {
 	if len(args) != 0 {
 		cs := newCstring(join(args))
-		err :=  u.update([]*cstring{cs})
+		err := u.update([]*cstring{cs})
 		cs.Free()
 		return err
 	} else if len(u.args) != 0 {
@@ -158,12 +163,14 @@ func (u *Updater) Update(args ...interface{}) error {
 	return nil
 }
 
+// GraphInfo :
 type GraphInfo struct {
 	Print         []string
 	Width, Height uint
 	Ymin, Ymax    float64
 }
 
+// Grapher :
 type Grapher struct {
 	title           string
 	vlabel          string
@@ -189,6 +196,7 @@ type Grapher struct {
 	lazy bool
 
 	colors map[string]string
+	fonts  map[string]GraphFont
 
 	slopeMode bool
 
@@ -202,120 +210,161 @@ type Grapher struct {
 	args []string
 }
 
+// GraphFont :
+type GraphFont struct {
+	Size string
+	Name string
+}
+
 const (
 	maxUint = ^uint(0)
 	maxInt  = int(maxUint >> 1)
 	minInt  = -maxInt - 1
 )
 
+// NewGrapher :
 func NewGrapher() *Grapher {
 	return &Grapher{
 		upperLimit:    -math.MaxFloat64,
 		lowerLimit:    math.MaxFloat64,
 		unitsExponent: minInt,
 		colors:        make(map[string]string),
+		fonts:         make(map[string]GraphFont),
 	}
 }
 
+// SetTitle :
 func (g *Grapher) SetTitle(title string) {
 	g.title = title
 }
 
+// SetVLabel :
 func (g *Grapher) SetVLabel(vlabel string) {
 	g.vlabel = vlabel
 }
 
+// SetSize :
 func (g *Grapher) SetSize(width, height uint) {
 	g.width = width
 	g.height = height
 }
 
+// SetLowerLimit :
 func (g *Grapher) SetLowerLimit(limit float64) {
 	g.lowerLimit = limit
 }
 
+// SetUpperLimit :
 func (g *Grapher) SetUpperLimit(limit float64) {
 	g.upperLimit = limit
 }
 
+// SetRigid :
 func (g *Grapher) SetRigid() {
 	g.rigid = true
 }
 
+// SetAltAutoscale :
 func (g *Grapher) SetAltAutoscale() {
 	g.altAutoscale = true
 }
 
+// SetAltAutoscaleMin :
 func (g *Grapher) SetAltAutoscaleMin() {
 	g.altAutoscaleMin = true
 }
 
+// SetAltAutoscaleMax :
 func (g *Grapher) SetAltAutoscaleMax() {
 
 	g.altAutoscaleMax = true
 }
 
+// SetNoGridFit :
 func (g *Grapher) SetNoGridFit() {
 	g.noGridFit = true
 }
 
+// SetLogarithmic :
 func (g *Grapher) SetLogarithmic() {
 	g.logarithmic = true
 }
 
+// SetUnitsExponent :
 func (g *Grapher) SetUnitsExponent(e int) {
 	g.unitsExponent = e
 }
 
+// SetUnitsLength :
 func (g *Grapher) SetUnitsLength(l uint) {
 	g.unitsLength = l
 }
 
+// SetRightAxis :
 func (g *Grapher) SetRightAxis(scale, shift float64) {
 	g.rightAxisScale = scale
 	g.rightAxisShift = shift
 }
 
+// SetRightAxisLabel :
 func (g *Grapher) SetRightAxisLabel(label string) {
 	g.rightAxisLabel = label
 }
 
+// SetNoLegend :
 func (g *Grapher) SetNoLegend() {
 	g.noLegend = true
 }
 
+// SetLazy :
 func (g *Grapher) SetLazy() {
 	g.lazy = true
 }
 
+// SetColor :
 func (g *Grapher) SetColor(colortag, color string) {
 	g.colors[colortag] = color
 }
 
+// SetFont :
+func (g *Grapher) SetFont(fonttag, size, font string) {
+	g.fonts[fonttag] = GraphFont{
+		Size: size,
+		Name: font,
+	}
+}
+
+// SetSlopeMode :
 func (g *Grapher) SetSlopeMode() {
 	g.slopeMode = true
 }
 
+// SetImageFormat :
 func (g *Grapher) SetImageFormat(format string) {
 	g.imageFormat = format
 }
 
+// SetInterlaced :
 func (g *Grapher) SetInterlaced() {
 	g.interlaced = true
 }
 
+// SetBase :
 func (g *Grapher) SetBase(base uint) {
 	g.base = base
 }
 
+// SetWatermark :
 func (g *Grapher) SetWatermark(watermark string) {
 	g.watermark = watermark
 }
 
+// SetDaemon :
 func (g *Grapher) SetDaemon(daemon string) {
 	g.daemon = daemon
 }
 
+// AddOptions :
 func (g *Grapher) AddOptions(options ...string) {
 	g.args = append(g.args, options...)
 }
@@ -327,6 +376,7 @@ func (g *Grapher) push(cmd string, options []string) {
 	g.args = append(g.args, cmd)
 }
 
+// Def :
 func (g *Grapher) Def(vname, rrdfile, dsname, cf string, options ...string) {
 	g.push(
 		fmt.Sprintf("DEF:%s=%s:%s:%s", vname, rrdfile, dsname, cf),
@@ -334,33 +384,42 @@ func (g *Grapher) Def(vname, rrdfile, dsname, cf string, options ...string) {
 	)
 }
 
+// VDef :
 func (g *Grapher) VDef(vname, rpn string) {
 	g.push("VDEF:"+vname+"="+rpn, nil)
 }
 
+// CDef :
 func (g *Grapher) CDef(vname, rpn string) {
 	g.push("CDEF:"+vname+"="+rpn, nil)
 }
 
+// Print :
 func (g *Grapher) Print(vname, format string) {
 	g.push("PRINT:"+vname+":"+format, nil)
 }
 
+// PrintT :
 func (g *Grapher) PrintT(vname, format string) {
 	g.push("PRINT:"+vname+":"+format+":strftime", nil)
 }
+
+// GPrint :
 func (g *Grapher) GPrint(vname, format string) {
 	g.push("GPRINT:"+vname+":"+format, nil)
 }
 
+// GPrintT :
 func (g *Grapher) GPrintT(vname, format string) {
 	g.push("GPRINT:"+vname+":"+format+":strftime", nil)
 }
 
+// Comment :
 func (g *Grapher) Comment(s string) {
 	g.push("COMMENT:"+s, nil)
 }
 
+// VRule :
 func (g *Grapher) VRule(t interface{}, color string, options ...string) {
 	if v, ok := t.(time.Time); ok {
 		t = v.Unix()
@@ -369,11 +428,13 @@ func (g *Grapher) VRule(t interface{}, color string, options ...string) {
 	g.push(vr, options)
 }
 
+// HRule :
 func (g *Grapher) HRule(value, color string, options ...string) {
 	hr := "HRULE:" + value + "#" + color
 	g.push(hr, options)
 }
 
+// Line :
 func (g *Grapher) Line(width float32, value, color string, options ...string) {
 	line := fmt.Sprintf("LINE%f:%s", width, value)
 	if color != "" {
@@ -382,6 +443,7 @@ func (g *Grapher) Line(width float32, value, color string, options ...string) {
 	g.push(line, options)
 }
 
+// Area :
 func (g *Grapher) Area(value, color string, options ...string) {
 	area := "AREA:" + value
 	if color != "" {
@@ -390,6 +452,7 @@ func (g *Grapher) Area(value, color string, options ...string) {
 	g.push(area, options)
 }
 
+// Tick :
 func (g *Grapher) Tick(vname, color string, options ...string) {
 	tick := "TICK:" + vname
 	if color != "" {
@@ -398,6 +461,7 @@ func (g *Grapher) Tick(vname, color string, options ...string) {
 	g.push(tick, options)
 }
 
+// Shift :
 func (g *Grapher) Shift(vname string, offset interface{}) {
 	if v, ok := offset.(time.Duration); ok {
 		offset = int64((v + time.Second/2) / time.Second)
@@ -406,6 +470,7 @@ func (g *Grapher) Shift(vname string, offset interface{}) {
 	g.push(shift, nil)
 }
 
+// TextAlign :
 func (g *Grapher) TextAlign(align string) {
 	g.push("TEXTALIGN:"+align, nil)
 }
@@ -421,6 +486,7 @@ func (g *Grapher) SaveGraph(filename string, start, end time.Time) (GraphInfo, e
 	return gi, err
 }
 
+// FetchResult :
 type FetchResult struct {
 	Filename string
 	Cf       string
@@ -432,10 +498,12 @@ type FetchResult struct {
 	values   []float64
 }
 
+// ValueAt :
 func (r *FetchResult) ValueAt(dsIndex, rowIndex int) float64 {
 	return r.values[len(r.DsNames)*rowIndex+dsIndex]
 }
 
+// Exporter :
 type Exporter struct {
 	maxRows uint
 
@@ -444,10 +512,12 @@ type Exporter struct {
 	args []string
 }
 
+// NewExporter :
 func NewExporter() *Exporter {
 	return &Exporter{}
 }
 
+// SetMaxRows :
 func (e *Exporter) SetMaxRows(maxRows uint) {
 	e.maxRows = maxRows
 }
@@ -459,6 +529,7 @@ func (e *Exporter) push(cmd string, options []string) {
 	e.args = append(e.args, cmd)
 }
 
+// Def :
 func (e *Exporter) Def(vname, rrdfile, dsname, cf string, options ...string) {
 	e.push(
 		fmt.Sprintf("DEF:%s=%s:%s:%s", vname, rrdfile, dsname, cf),
@@ -466,22 +537,27 @@ func (e *Exporter) Def(vname, rrdfile, dsname, cf string, options ...string) {
 	)
 }
 
+// CDef :
 func (e *Exporter) CDef(vname, rpn string) {
 	e.push("CDEF:"+vname+"="+rpn, nil)
 }
 
+// XportDef :
 func (e *Exporter) XportDef(vname, label string) {
 	e.push("XPORT:"+vname+":"+label, nil)
 }
 
+// Xport :
 func (e *Exporter) Xport(start, end time.Time, step time.Duration) (XportResult, error) {
 	return e.xport(start, end, step)
 }
 
+// SetDaemon :
 func (e *Exporter) SetDaemon(daemon string) {
 	e.daemon = daemon
 }
 
+// XportResult :
 type XportResult struct {
 	Start   time.Time
 	End     time.Time
@@ -491,6 +567,7 @@ type XportResult struct {
 	values  []float64
 }
 
+// ValueAt :
 func (r *XportResult) ValueAt(legendIndex, rowIndex int) float64 {
 	return r.values[len(r.Legends)*rowIndex+legendIndex]
 }

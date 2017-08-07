@@ -130,6 +130,7 @@ var (
 	oLazy = C.CString("-z")
 
 	oColor = C.CString("-c")
+	oFont  = C.CString("--font")
 
 	oSlopeMode   = C.CString("-E")
 	oImageFormat = C.CString("-a")
@@ -252,6 +253,9 @@ func (g *Grapher) makeArgs(filename string, start, end time.Time) []*C.char {
 	}
 	for tag, color := range g.colors {
 		args = append(args, oColor, C.CString(tag+"#"+color))
+	}
+	for tag, font := range g.fonts {
+		args = append(args, oFont, C.CString(tag+":"+font.Size+":"+font.Name))
 	}
 	if g.slopeMode {
 		args = append(args, oSlopeMode)

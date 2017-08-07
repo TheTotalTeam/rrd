@@ -29,7 +29,7 @@ func TestAll(t *testing.T) {
 	u := NewUpdater(dbfile)
 	for i := 0; i < 10; i++ {
 		time.Sleep(step * time.Second)
-		err := u.Update(time.Now(), i, 1.5*float64(i))
+		err = u.Update(time.Now(), i, 1.5*float64(i))
 		if err != nil {
 			t.Fatal(err)
 		}
